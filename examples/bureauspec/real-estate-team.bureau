@@ -1,0 +1,71 @@
+edition "real.estate.team" extends "core.professional" {
+  vocabulary: ["Buyer", "Property", "Offer", "Brokerage"]
+  accent: "#335f4b"
+}
+
+workflow "buyer-representation-new-client" version 4 {
+  audience: "Buyer + agent + transaction coordinator"
+  access: magic_link
+  autosave: continuous
+
+  step buyer_story {
+    type: collect
+    actor: "Buyer"
+    purpose: "Goals, timing, people, and constraints"
+    complete_when: required_answers.accepted
+    next: identity_financing
+  }
+
+  step identity_financing {
+    type: collect
+    actor: "Buyer"
+    purpose: "Identity, pre-approval, and consent"
+    complete_when: evidence.accepted
+    next: readiness_check
+  }
+
+  step readiness_check {
+    type: review
+    actor: "Buyer agent"
+    purpose: "Verify fit and exceptions"
+    complete_when: review.resolved
+    next: representation_route
+  }
+
+  step representation_route {
+    type: decision
+    actor: "System"
+    purpose: "Choose ready, nurture, or referral route"
+    branch ready: representation_agreement
+    branch nurture: nurture_handoff
+    branch refer: referral_handoff
+  }
+
+  step representation_agreement {
+    type: sign
+    actor: "Buyer + agent"
+    purpose: "Explain, acknowledge, and sign"
+    complete_when: signature.accepted
+    next: activate_search
+  }
+
+  step activate_search {
+    type: complete
+    actor: "Transaction coordinator"
+    purpose: "Create CRM record and next actions"
+    emit: workflow.completed
+  }
+}
+
+experience portal {
+  navigation: progressive
+  explain_before_ask: true
+  resume_across_devices: true
+  rejection: item_level
+}
+
+evidence policy {
+  audit: full
+  seal: tamper_evident
+  export: [pdf, docx, csv, json]
+}
